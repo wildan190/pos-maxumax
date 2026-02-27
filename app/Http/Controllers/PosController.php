@@ -14,7 +14,8 @@ class PosController extends Controller
     public function index()
     {
         $products = Product::all();
-        return view('pos.index', compact('products'));
+        $authUser = auth()->user();
+        return view('pos.index', compact('products', 'authUser'));
     }
 
     public function stockReport()
@@ -130,6 +131,10 @@ class PosController extends Controller
 
     public function destroyProduct($id)
     {
+        if (auth()->user()->role !== 'superadmin') {
+            return response()->json(['message' => 'Unauthorized. Only Superadmin can delete products.'], 403);
+        }
+
         $product = Product::findOrFail($id);
         $product->delete();
         return response()->json(['message' => 'Product deleted successfully']);
@@ -207,5 +212,18 @@ class PosController extends Controller
     {
         $transaction = Transaction::with('items')->findOrFail($id);
         return view('pos.receipt', compact('transaction'));
+    }
+
+    public function destroyTransaction($id)
+    {
+        if (auth()->user()->role !== 'superadmin') {
+            return response()->json(['message' => 'Unauthorized. Only Superadmin can delete transactions.'], 403);
+        }
+
+        $transaction = Transaction::findOrFail($id);
+        $transaction->items()->delete();
+        $transaction->delete();
+
+        return response()->json(['message' => 'Transaction deleted successfully']);
     }
 }
