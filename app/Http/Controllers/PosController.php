@@ -21,7 +21,8 @@ class PosController extends Controller
     public function stockReport()
     {
         $products = Product::all()->map(function ($product) {
-            $stockData = is_array($product->stock) ? $product->stock : json_decode($product->stock, true);
+            $rawStock = $product->stock;
+            $stockData = is_string($rawStock) ? json_decode($rawStock, true) : (is_array($rawStock) ? $rawStock : []);
 
             // Ensure size_value is always an integer to prevent "string + string" errors
             $stockData = collect($stockData ?? [])->map(function ($s) {
@@ -229,5 +230,37 @@ class PosController extends Controller
         $transaction->delete();
 
         return response()->json(['message' => 'Transaction deleted successfully']);
+    }
+
+    public function printWiFi(Request $request)
+    {
+        $validated = $request->validate([
+            'ip' => 'required|string',
+            'port' => 'nullable|integer',
+            'text' => 'required|string',
+        ]);
+
+        $ip = $validated['ip'];
+        $port = $validated['port'] ?? 9100;
+        $text = $validated['text'];
+
+        try {
+            // ESC/POS Initialization and text encoding
+            $init = "\x1b\x40"; // ESC @ (Initialize)
+            $cut = "\x0a\x0a\x0a\x0a\x1d\x56\x42\x00"; // LF x4, GS V B 0 (Cut)
+            $payload = $init . $text . $cut;
+
+            $fp = fsockopen($ip, $port, $errno, $errstr, 5); // 5 second timeout
+            if (!$fp) {
+                return response()->json(['message' => "Could not connect to printer at $ip:$port. Error: $errstr"], 500);
+            }
+
+            fwrite($fp, $payload);
+            fclose($fp);
+
+            return response()->json(['message' => 'Printing successful']);
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'Printing error: ' . $e->getMessage()], 500);
+        }
     }
 }

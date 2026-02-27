@@ -19,5 +19,6 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/api/transactions', [PosController::class, 'storeTransaction'])->name('pos.storeTransaction');
     Route::delete('/api/transactions/{id}', [PosController::class, 'destroyTransaction'])->name('pos.destroyTransaction');
     Route::get('/receipt/{id}', [PosController::class, 'printReceipt'])->name('pos.printReceipt');
+    Route::post('/api/print-wifi', [PosController::class, 'printWiFi'])->name('pos.printWiFi');
     Route::get('/stock-report', [PosController::class, 'stockReport'])->name('pos.stockReport');
 });
