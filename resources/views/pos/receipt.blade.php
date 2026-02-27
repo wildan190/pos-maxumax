@@ -207,9 +207,14 @@
 
     <div class="divider"></div>
 
-    <div class="flex justify-between mb-4 mt-4">
-        <div>{{ $transaction->payment_method ?? 'DuitNow' }}</div>
-        <div class="text-right">{{ number_format($transaction->total_amount, 2) }}</div>
+    <div class="flex justify-between mb-2 mt-4 font-bold">
+        <div>{{ $transaction->payment_method ?? 'Cash' }} (Paid):</div>
+        <div class="text-right">{{ number_format($transaction->paid_amount, 2) }}</div>
+    </div>
+
+    <div class="flex justify-between mb-4 mt-2">
+        <div>Change:</div>
+        <div class="text-right">{{ number_format($transaction->change_amount, 2) }}</div>
     </div>
 
     <div class="text-center mb-4">

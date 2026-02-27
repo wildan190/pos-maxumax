@@ -24,8 +24,8 @@
 <body class="bg-slate-900 text-slate-100 h-screen flex overflow-hidden" x-data="posApp()">
 
     <!-- Main Sidebar / Cart -->
-    <div
-        class="w-full sm:w-2/5 md:w-1/3 xl:w-1/4 bg-slate-800 border-r border-slate-700 flex flex-col h-full shadow-2xl z-10 relative shrink-0">
+    <div class="w-full sm:w-2/5 md:w-1/3 xl:w-1/4 bg-slate-800 border-r border-slate-700 flex-col h-full shadow-2xl z-30 relative shrink-0 transition-all duration-300"
+        :class="activeTab === 'cart' ? 'flex fixed inset-0' : 'hidden sm:flex'">
         <div class="p-6 border-b border-slate-700 bg-slate-800/50 backdrop-blur">
             <h1 class="text-3xl font-bold bg-gradient-to-r from-blue-400 to-indigo-500 bg-clip-text text-transparent">
                 MAXUMAX</h1>
@@ -33,7 +33,7 @@
         </div>
 
         <!-- Cart Items -->
-        <div class="flex-1 overflow-y-auto p-4 space-y-3">
+        <div class="flex-1 overflow-y-auto p-4 space-y-3 pb-20 sm:pb-4">
             <template x-if="cart.length === 0">
                 <div class="h-full flex flex-col items-center justify-center text-slate-500">
                     <svg class="w-16 h-16 mb-4 opacity-20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -82,7 +82,7 @@
         </div>
 
         <!-- Cart Summary -->
-        <div class="p-6 bg-slate-800 border-t border-slate-700 shadow-[0_-10px_40px_rgba(0,0,0,0.2)]">
+        <div class="p-6 bg-slate-800 border-t border-slate-700 shadow-[0_-10px_40px_rgba(0,0,0,0.2)] pb-24 sm:pb-6">
             <div class="space-y-3 mb-6">
                 <div class="flex justify-between text-slate-400">
                     <span>Subtotal</span>
@@ -122,7 +122,8 @@
     </div>
 
     <!-- Main ContentArea (Products) -->
-    <div class="flex-1 flex flex-col h-full bg-slate-900 relative">
+    <div class="flex-1 flex flex-col h-full bg-slate-900 relative min-w-0"
+        :class="activeTab === 'products' ? 'flex' : 'hidden sm:flex'">
         <!-- Header -->
         <header
             class="min-h-[5rem] border-b border-slate-800 flex flex-col md:flex-row items-start md:items-center justify-between px-4 md:px-8 py-4 gap-4">
@@ -136,24 +137,44 @@
                     class="w-full bg-slate-800 border-none text-slate-200 rounded-full py-2.5 pl-10 pr-4 focus:ring-2 focus:ring-blue-500 placeholder-slate-500 outline-none shadow-inner">
             </div>
             <div class="flex flex-wrap items-center gap-2 md:gap-3 w-full md:w-auto justify-end">
+                @if($authUser->role === 'superadmin')
+                    <div
+                        class="flex items-center gap-2 bg-rose-500/10 border border-rose-500/30 text-rose-400 px-3 py-1.5 rounded-full text-xs font-bold animate-pulse">
+                        <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd"
+                                d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                                clip-rule="evenodd" />
+                        </svg>
+                        SUPERADMIN
+                    </div>
+                @endif
+
                 <!-- Printer Status Indicator -->
-                <button @click="printerStatus === 'connected' ? disconnectPrinter() : connectPrinter()"
-                    class="bg-slate-800 hover:bg-slate-700 font-medium py-2 px-3 md:py-2.5 md:px-4 rounded-full border border-slate-700 transition flex items-center gap-2"
-                    :class="printerStatus === 'connected' ? 'text-emerald-400 border-emerald-500/30 bg-emerald-500/10' : 'text-rose-400 border-rose-500/30 bg-rose-500/10'"
-                    title="Toggle Printer Status (Demo)">
-                    <!-- Printer SVG Icon -->
-                    <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
-                    </svg>
-                    <span class="relative flex h-3 w-3">
-                        <span x-show="printerStatus === 'connected'"
-                            class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                        <span class="relative inline-flex rounded-full h-3 w-3"
-                            :class="printerStatus === 'connected' ? 'bg-emerald-500' : 'bg-rose-500'"></span>
-                    </span>
-                    <span class="text-sm" x-text="printerStatus === 'connected' ? 'Connected' : 'Disconnected'"></span>
-                </button>
+                <div class="flex items-center gap-2">
+                    <button @click="showPrinterSettings = true"
+                        class="bg-slate-800 hover:bg-slate-700 font-medium py-2 px-3 md:py-2.5 md:px-4 rounded-full border border-slate-700 transition flex items-center gap-2"
+                        :class="printerStatus === 'connected' || printerType === 'wifi' ? 'text-emerald-400 border-emerald-500/30 bg-emerald-500/10' : 'text-slate-400 border-slate-700'"
+                        title="Printer Settings">
+                        <!-- Printer SVG Icon -->
+                        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                        </svg>
+                        <span class="text-sm"
+                            x-text="printerType === 'bluetooth' ? (printerStatus === 'connected' ? 'BT: OK' : 'Connect BT') : 'WiFi: ' + wifiIP"></span>
+                    </button>
+
+                    <!-- Simulation Toggle -->
+                    <button @click="isPrinterSimulation = !isPrinterSimulation"
+                        class="bg-slate-800 hover:bg-slate-700 font-medium py-2 px-3 md:py-2.5 md:px-4 rounded-full border border-slate-700 transition flex items-center gap-2"
+                        :class="isPrinterSimulation ? 'text-amber-400 border-amber-500/30 bg-amber-500/10' : 'text-slate-400 border-slate-700'">
+                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                        </svg>
+                        <span class="text-xs" x-text="isPrinterSimulation ? 'Sim Mode: ON' : 'Sim Mode: OFF'"></span>
+                    </button>
+                </div>
 
                 <a href="{{ route('pos.stockReport') }}"
                     class="bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white font-medium py-2 px-3 md:py-2.5 md:px-5 rounded-full border border-slate-700 transition flex items-center gap-2">
@@ -194,7 +215,7 @@
         </header>
 
         <!-- Product Grid -->
-        <div class="flex-1 p-4 md:p-8 overflow-y-auto">
+        <div class="flex-1 p-4 md:p-8 overflow-y-auto pb-24 sm:pb-8">
             <h2 class="text-xl font-semibold mb-4 flex items-center gap-2">
                 <span class="w-2 h-6 bg-blue-500 rounded-full inline-block"></span>
                 Available Products
@@ -219,7 +240,7 @@
             <div class="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
                 <template x-for="product in filteredProducts" :key="product.id">
                     <div
-                        class="bg-slate-800 rounded-2xl p-5 border border-slate-700 hover:border-blue-500/50 hover:bg-slate-700/80 transition duration-200 flex flex-col justify-between group shadow-sm overflow-hidden relative min-h-[160px]">
+                        class="bg-slate-800 rounded-2xl p-3 sm:p-5 border border-slate-700 hover:border-blue-500/50 hover:bg-slate-700/80 transition duration-200 flex flex-col justify-between group shadow-sm overflow-hidden relative min-h-[140px] sm:min-h-[160px]">
 
                         <!-- Overlay Actions (Edit / Delete) -->
                         <div
@@ -233,15 +254,17 @@
                                     </path>
                                 </svg>
                             </button>
-                            <button @click.stop="deleteProduct(product.id)"
-                                class="bg-red-600/80 hover:bg-red-500 text-white p-1.5 rounded-md backdrop-blur shadow-lg transition"
-                                title="Delete">
-                                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
-                                    </path>
-                                </svg>
-                            </button>
+                            @if($authUser->role === 'superadmin')
+                                <button @click.stop="deleteProduct(product.id)"
+                                    class="bg-red-600/80 hover:bg-red-500 text-white p-1.5 rounded-md backdrop-blur shadow-lg transition"
+                                    title="Delete">
+                                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
+                                        </path>
+                                    </svg>
+                                </button>
+                            @endif
                         </div>
 
                         <!-- Clickable Area for Adding to Cart -->
@@ -249,14 +272,14 @@
 
                         <!-- Image Background / Thumbnail -->
                         <div
-                            class="absolute inset-x-0 top-0 h-24 bg-slate-900 border-b border-slate-700 overflow-hidden">
+                            class="absolute inset-x-0 top-0 h-20 sm:h-24 bg-slate-900 border-b border-slate-700 overflow-hidden">
                             <template x-if="product.image">
                                 <img :src="'/storage/' + product.image" alt="Product Image"
                                     class="w-full h-full object-contain opacity-90 group-hover:opacity-100 transition duration-300 p-1">
                             </template>
                             <template x-if="!product.image">
                                 <div class="w-full h-full flex items-center justify-center">
-                                    <svg class="w-8 h-8 text-slate-600" fill="none" viewBox="0 0 24 24"
+                                    <svg class="w-6 h-6 sm:w-8 sm:h-8 text-slate-600" fill="none" viewBox="0 0 24 24"
                                         stroke="currentColor">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
                                             d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z">
@@ -266,19 +289,19 @@
                             </template>
                         </div>
 
-                        <div class="z-10 mt-20 pointer-events-none">
-                            <p class="text-xs font-medium text-slate-400 mb-1" x-text="product.item_code"
-                                style="text-shadow: 0px 1px 3px rgba(0,0,0,0.8);"></p>
-                            <h3 class="font-semibold text-slate-100 line-clamp-2 leading-tight" x-text="product.name"
-                                style="text-shadow: 0px 1px 3px rgba(0,0,0,0.8);">
+                        <div class="z-10 mt-16 sm:mt-20 pointer-events-none">
+                            <p class="text-[10px] sm:text-xs font-medium text-slate-400 mb-0.5 sm:mb-1"
+                                x-text="product.item_code" style="text-shadow: 0px 1px 3px rgba(0,0,0,0.8);"></p>
+                            <h3 class="font-semibold text-slate-100 line-clamp-2 leading-tight text-xs sm:text-base"
+                                x-text="product.name" style="text-shadow: 0px 1px 3px rgba(0,0,0,0.8);">
                             </h3>
                         </div>
-                        <div class="flex justify-between items-end mt-4 z-10 relative pointer-events-none">
+                        <div class="flex justify-between items-end mt-2 sm:mt-4 z-10 relative pointer-events-none">
                             <span
-                                class="text-[10px] bg-slate-900/80 backdrop-blur border border-slate-700 px-2 py-1 rounded text-slate-300 capitalize"
+                                class="text-[9px] sm:text-[10px] bg-slate-900/80 backdrop-blur border border-slate-700 px-1.5 sm:px-2 py-0.5 sm:py-1 rounded text-slate-300 capitalize"
                                 x-text="product.type"></span>
                             <span
-                                class="font-bold text-lg text-blue-400 group-hover:text-blue-300 transition backdrop-blur bg-slate-900/30 px-2 rounded -mr-2"
+                                class="font-bold text-sm sm:text-lg text-blue-400 group-hover:text-blue-300 transition backdrop-blur bg-slate-900/30 px-1.5 sm:px-2 rounded -mr-1 sm:-mr-2"
                                 x-text="formatCurrency(product.price)"></span>
                         </div>
                     </div>
@@ -300,7 +323,7 @@
             x-transition:leave="transition ease-in duration-200 transform"
             x-transition:leave-start="opacity-100 translate-y-0 scale-100"
             x-transition:leave-end="opacity-0 translate-y-8 scale-95"
-            class="bg-slate-800 rounded-2xl shadow-2xl border border-slate-700 w-full max-w-md relative z-10 overflow-hidden">
+            class="bg-slate-800 rounded-2xl shadow-2xl border border-slate-700 w-[92%] sm:w-full max-w-md max-h-[90vh] flex flex-col relative z-10 overflow-hidden">
 
             <div
                 class="px-6 py-4 border-b border-slate-700 flex justify-between items-center bg-slate-800/80 backdrop-blur">
@@ -312,7 +335,7 @@
                     </svg></button>
             </div>
 
-            <div class="p-6 space-y-4">
+            <div class="p-6 space-y-4 overflow-y-auto flex-1">
                 <div>
                     <label class="block text-sm font-medium text-slate-300 mb-1">Item Code (Auto-generated)</label>
                     <input type="text" x-model="editingProduct.item_code" readonly
@@ -369,7 +392,7 @@
                         <p class="text-xs text-slate-500 italic">No stock defined. Click "+ Add Size" to add stock
                             entries.</p>
                     </template>
-                    <div class="space-y-2 overflow-x-hidden">
+                    <div class="space-y-2 overflow-x-hidden max-h-60 overflow-y-auto pr-2">
                         <template x-for="(row, idx) in editingProduct.stock" :key="idx">
                             <div class="flex items-center gap-2">
                                 <template
@@ -428,7 +451,7 @@
             x-transition:leave="transition ease-in duration-200 transform"
             x-transition:leave-start="opacity-100 translate-y-0 scale-100"
             x-transition:leave-end="opacity-0 translate-y-8 scale-95"
-            class="bg-slate-800 rounded-2xl shadow-2xl border border-slate-700 w-full max-w-2xl max-h-[90vh] flex flex-col relative z-10 overflow-hidden">
+            class="bg-slate-800 rounded-2xl shadow-2xl border border-slate-700 w-[92%] sm:w-full max-w-2xl max-h-[90vh] flex flex-col relative z-10 overflow-hidden">
 
             <div
                 class="px-6 py-4 border-b border-slate-700 flex justify-between items-center bg-slate-800/80 backdrop-blur shrink-0">
@@ -506,7 +529,7 @@
                                         stock
                                         entries.</p>
                                 </template>
-                                <div class="space-y-2 overflow-x-hidden">
+                                <div class="space-y-2 overflow-x-hidden max-h-60 overflow-y-auto pr-2">
                                     <template x-for="(row, idx) in product.stock" :key="idx">
                                         <div class="flex items-center gap-2">
                                             <template
@@ -622,8 +645,18 @@
                                 <span class="text-xs text-slate-400 ml-2"
                                     x-text="new Date(txn.created_at).toLocaleString()"></span>
                             </div>
-                            <div class="text-right">
+                            <div class="text-right flex items-center gap-3">
                                 <span class="font-bold text-blue-400" x-text="formatCurrency(txn.total_amount)"></span>
+                                @if($authUser->role === 'superadmin')
+                                    <button @click="deleteTransaction(txn.id)"
+                                        class="text-slate-500 hover:text-red-400 p-1 rounded-md transition"
+                                        title="Delete Transaction">
+                                        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                        </svg>
+                                    </button>
+                                @endif
                             </div>
                         </div>
                         <div class="space-y-2">
@@ -661,6 +694,234 @@
         </div>
     </div>
 
+    <!-- Payment Confirmation Modal -->
+    <div x-cloak x-show="showPaymentModal" class="fixed inset-0 z-[60] flex items-center justify-center p-4">
+        <!-- Backdrop -->
+        <div x-show="showPaymentModal" x-transition.opacity class="absolute inset-0 bg-slate-950/90 backdrop-blur-md"
+            @click="showPaymentModal = false"></div>
+
+        <!-- Modal Content -->
+        <div x-show="showPaymentModal" x-transition:enter="transition ease-out duration-300 transform"
+            x-transition:enter-start="opacity-0 translate-y-8 scale-95"
+            x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+            x-transition:leave="transition ease-in duration-200 transform"
+            x-transition:leave-start="opacity-100 translate-y-0 scale-100"
+            x-transition:leave-end="opacity-0 translate-y-8 scale-95"
+            class="bg-slate-800 rounded-3xl shadow-2xl border border-slate-700 w-full max-w-lg relative z-10 overflow-hidden">
+
+            <div class="p-8 space-y-8">
+                <div class="text-center">
+                    <h3 class="text-2xl font-bold text-white mb-2">Payment Confirmation</h3>
+                    <p class="text-slate-400">Please enter the cash amount received</p>
+                </div>
+
+                <div class="grid grid-cols-2 gap-6">
+                    <div class="bg-slate-900/50 p-6 rounded-2xl border border-slate-700/50 flex flex-col items-center">
+                        <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Total
+                            Bill</span>
+                        <div class="text-3xl font-bold text-white" x-text="formatCurrency(total)"></div>
+                    </div>
+                    <div class="bg-blue-600/10 p-6 rounded-2xl border border-blue-500/30 flex flex-col items-center">
+                        <span class="text-xs font-semibold text-blue-400 uppercase tracking-wider mb-2">Change</span>
+                        <div class="text-3xl font-bold text-blue-400" x-text="formatCurrency(changeAmount)"></div>
+                    </div>
+                </div>
+
+                <div class="space-y-4">
+                    <label class="block text-center text-sm font-medium text-slate-300">Cash Received (BND)</label>
+                    <div class="relative group">
+                        <span
+                            class="absolute inset-y-0 left-0 flex items-center pl-6 text-slate-500 font-bold text-2xl">BND</span>
+                        <input type="number" id="paidAmountInput" x-model.number="paidAmount" step="0.01"
+                            @keydown.enter="if(paidAmount >= total) confirmPayment()"
+                            class="w-full bg-slate-900 border-2 border-slate-700 rounded-2xl py-6 pl-20 pr-6 text-4xl font-bold text-white text-right focus:border-blue-500 focus:ring-4 focus:ring-blue-500/20 outline-none transition transition-all duration-300 placeholder-slate-700"
+                            placeholder="0.00">
+                    </div>
+
+                    <!-- Quick Cash Buttons -->
+                    <div class="grid grid-cols-4 gap-2">
+                        <template x-for="val in [10, 20, 50, 100]" :key="val">
+                            <button @click="paidAmount = val"
+                                class="py-2.5 bg-slate-700/50 hover:bg-slate-700 text-slate-300 rounded-xl border border-slate-600 transition font-medium text-sm">
+                                BND <span x-text="val"></span>
+                            </button>
+                        </template>
+                        <button @click="paidAmount = total"
+                            class="col-span-4 py-3 bg-slate-700/50 hover:bg-blue-600/20 hover:text-blue-400 hover:border-blue-500/50 text-slate-300 rounded-xl border border-slate-600 transition font-bold text-sm tracking-wide">
+                            Exact Amount (BND <span x-text="total"></span>)
+                        </button>
+                    </div>
+                </div>
+
+                <div class="flex gap-4 pt-4">
+                    <button @click="showPaymentModal = false"
+                        class="flex-1 py-4 font-semibold text-slate-400 hover:text-white transition">Cancel</button>
+                    <button @click="confirmPayment()" :disabled="paidAmount < total || isSubmittingPayment"
+                        class="flex-[2] bg-blue-600 hover:bg-blue-500 disabled:bg-slate-700 disabled:text-slate-500 disabled:cursor-not-allowed text-white font-bold py-4 rounded-2xl shadow-xl shadow-blue-500/20 transition transform active:scale-[0.98] flex justify-center items-center gap-2">
+                        <span x-show="!isSubmittingPayment">Confirm Payment</span>
+                        <span x-show="isSubmittingPayment" class="flex items-center gap-2">
+                            <svg class="animate-spin h-5 w-5" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"
+                                    fill="none"></circle>
+                                <path class="opacity-75" fill="currentColor"
+                                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                                </path>
+                            </svg>
+                            Submitting...
+                        </span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Printer Settings Modal -->
+    <div x-show="showPrinterSettings" class="fixed inset-0 z-[60] overflow-y-auto" x-cloak>
+        <div class="flex items-center justify-center min-h-screen p-4 sm:p-6">
+            <div class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm transition-opacity"
+                @click="showPrinterSettings = false"></div>
+
+            <div
+                class="relative bg-slate-900 border border-slate-700 w-full max-w-md rounded-3xl shadow-2xl overflow-hidden p-6 sm:p-8 animate-in fade-in zoom-in duration-200">
+                <h3 class="text-2xl font-bold text-white mb-6">Printer Settings</h3>
+
+                <div class="space-y-6">
+                    <div>
+                        <label class="block text-sm font-medium text-slate-400 mb-3">Connection Type</label>
+                        <div class="grid grid-cols-2 gap-3 p-1 bg-slate-950 rounded-2xl border border-slate-800">
+                            <button @click="printerType = 'bluetooth'"
+                                :class="printerType === 'bluetooth' ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/20' : 'text-slate-400 hover:text-slate-200'"
+                                class="py-2.5 rounded-xl text-sm font-semibold transition-all">
+                                Bluetooth
+                            </button>
+                            <button @click="printerType = 'wifi'"
+                                :class="printerType === 'wifi' ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/20' : 'text-slate-400 hover:text-slate-200'"
+                                class="py-2.5 rounded-xl text-sm font-semibold transition-all text-center">
+                                WiFi (LAN)
+                            </button>
+                            <button @click="printerType = 'usb'"
+                                :class="printerType === 'usb' ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/20' : 'text-slate-400 hover:text-slate-200'"
+                                class="col-span-2 py-2.5 rounded-xl text-sm font-semibold transition-all text-center">
+                                USB (Desktop/Android)
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Bluetooth Settings -->
+                    <div x-show="printerType === 'bluetooth'" class="space-y-4">
+                        <div class="p-4 bg-slate-950 rounded-2xl border border-slate-800">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-sm text-slate-400">Bluetooth Status:</span>
+                                <span :class="printerStatus === 'connected' ? 'text-emerald-400' : 'text-rose-400'"
+                                    class="text-sm font-bold uppercase tracking-wider" x-text="printerStatus"></span>
+                            </div>
+                            <button @click="printerStatus === 'connected' ? disconnectPrinter() : connectPrinter()"
+                                class="w-full py-3 px-4 rounded-xl text-sm font-bold transition flex items-center justify-center gap-2"
+                                :class="printerStatus === 'connected' ? 'bg-rose-500/10 text-rose-500 border border-rose-500/30 hover:bg-rose-500/20' : 'bg-blue-600 text-white hover:bg-blue-500'">
+                                <span
+                                    x-text="printerStatus === 'connected' ? 'Disconnect Printer' : 'Connect Bluetooth Printer'"></span>
+                            </button>
+                        </div>
+
+                        <!-- iOS Helper for Bluefy -->
+                        <div class="p-4 bg-blue-500/5 rounded-2xl border border-blue-500/20 space-y-3">
+                            <div class="flex items-center gap-2 text-blue-400">
+                                <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M12 18h.01M8 21h8a2 2 0 002-2V5a2 2 0 00-2-2H8a2 2 0 00-2 2v14a2 2 0 002 2z" />
+                                </svg>
+                                <span class="text-xs font-bold uppercase tracking-wider">iOS (iPhone/iPad) User?</span>
+                            </div>
+                            <p class="text-[11px] text-slate-400 leading-relaxed">
+                                Standard iOS browsers do not support Bluetooth. Please use the <strong>Bluefy
+                                    Browser</strong> to enable printing on this device.
+                            </p>
+                            <a href="https://apps.apple.com/us/app/bluefy-web-ble-browser/id1492822055" target="_blank"
+                                class="flex items-center justify-center gap-2 w-full py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-xl text-xs font-semibold transition border border-slate-700">
+                                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                                    <path
+                                        d="M18.71 19.5c-.83 1.24-1.71 2.45-3.1 2.48-1.34.03-1.77-.79-3.29-.79-1.53 0-1.99.77-3.28.82-1.31.05-2.32-1.32-3.15-2.53C4.2 17.08 3 12.43 4.66 9.54c.83-1.44 2.31-2.36 3.93-2.39 1.23-.03 2.39.82 3.15.82s2.12-1 3.59-.85c.62.02 2.36.25 3.48 1.89-1.03.62-1.73 1.76-1.73 3.3 0 2.05 1.67 3.32 1.67 3.32-.47 1.35-1.04 2.7-2.04 3.82zM15.03 3c.63-.78 1.05-1.85.93-2.93-1.01.04-2.23.68-2.95 1.52-.64.75-1.2 1.83-1.06 2.89 1.12.08 2.27-.63 3.08-1.48z" />
+                                </svg>
+                                Download Bluefy for iOS
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- WiFi Settings -->
+                    <div x-show="printerType === 'wifi'" class="space-y-4">
+                        <div class="p-4 bg-slate-950 rounded-2xl border border-slate-800 space-y-4">
+                            <div>
+                                <label
+                                    class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Printer
+                                    IP Address</label>
+                                <input type="text" x-model="wifiIP" placeholder="192.168.1.100"
+                                    class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-white focus:border-blue-500 transition outline-none text-center font-mono">
+                            </div>
+                            <div>
+                                <label
+                                    class="block text-xs font-bold text-slate-500 uppercase tracking-widest mb-2">Port
+                                    (usually 9100)</label>
+                                <input type="number" x-model="wifiPort"
+                                    class="w-full bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-white focus:border-blue-500 transition outline-none text-center font-mono">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- USB Settings -->
+                    <div x-show="printerType === 'usb'" class="space-y-4">
+                        <div class="p-4 bg-slate-950 rounded-2xl border border-slate-800">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-sm text-slate-400">USB Status:</span>
+                                <span :class="printerStatus === 'connected' ? 'text-emerald-400' : 'text-rose-400'"
+                                    class="text-sm font-bold uppercase tracking-wider" x-text="printerStatus"></span>
+                            </div>
+                            <button @click="printerStatus === 'connected' ? disconnectUSB() : connectUSB()"
+                                class="w-full py-3 px-4 rounded-xl text-sm font-bold transition flex items-center justify-center gap-2"
+                                :class="printerStatus === 'connected' ? 'bg-rose-500/10 text-rose-500 border border-rose-500/30 hover:bg-rose-500/20' : 'bg-blue-600 text-white hover:bg-blue-500'">
+                                <span
+                                    x-text="printerStatus === 'connected' ? 'Disconnect USB' : 'Connect USB Printer'"></span>
+                            </button>
+                            <div x-show="usbDevice" class="mt-2 text-[10px] text-slate-500 text-center">
+                                Connected to: <span class="text-slate-300"
+                                    x-text="usbDevice ? usbDevice.productName : ''"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-8">
+                    <button @click="showPrinterSettings = false"
+                        class="w-full py-4 bg-slate-800 hover:bg-slate-700 text-white font-bold rounded-2xl transition">
+                        Done
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Mobile Bottom Navigation -->
+    <div
+        class="sm:hidden fixed bottom-0 left-0 right-0 bg-slate-800 border-t border-slate-700 flex justify-around p-2 z-40">
+        <button @click="activeTab = 'products'" class="flex flex-col items-center gap-1 px-4 py-2 rounded-xl transition"
+            :class="activeTab === 'products' ? 'text-blue-400 bg-blue-500/10' : 'text-slate-400'">
+            <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+            </svg>
+            <span class="text-[10px] font-medium">Products</span>
+        </button>
+        <button @click="activeTab = 'cart'"
+            class="flex flex-col items-center gap-1 px-4 py-2 rounded-xl transition relative"
+            :class="activeTab === 'cart' ? 'text-blue-400 bg-blue-500/10' : 'text-slate-400'">
+            <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+            </svg>
+            <span x-show="cart.length > 0"
+                class="absolute top-1 right-3 bg-red-500 text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center font-bold"
+                x-text="cart.length"></span>
+            <span class="text-[10px] font-medium">Cart</span>
+        </button>
+    </div>
+
     <script>
         function posApp() {
             return {
@@ -668,12 +929,34 @@
                 filteredProducts: [], // Used to be initialized here, now it's a getter
                 categories: ['FABD Jersey', 'Outdoor Shirt', 'Pro Jersey', 'Accessories'],
                 selectedCategory: 'All',
+                activeTab: 'products',
 
-                // Bluetooth Printer Variables
+                // Printer State
+                printerType: 'bluetooth', // 'bluetooth', 'wifi', or 'usb'
+                wifiIP: '192.168.1.100',
+                wifiPort: 9100,
                 printerStatus: 'disconnected',
+                // Bluetooth specific
                 printerDevice: null,
                 printerServer: null,
                 printerCharacteristic: null,
+                // USB specific
+                usbDevice: null,
+                usbEndpointOut: null,
+                showPrinterSettings: false,
+
+                // Watch for changes in printerType to update printerStatus
+                init() {
+                    this.$watch('printerType', (val) => {
+                        if (val === 'bluetooth') {
+                            this.printerStatus = (this.printerDevice && this.printerDevice.gatt.connected) ? 'connected' : 'disconnected';
+                        } else if (val === 'usb') {
+                            this.printerStatus = (this.usbDevice && this.usbDevice.opened) ? 'connected' : 'disconnected';
+                        } else {
+                            this.printerStatus = 'disconnected'; // WiFi doesn't have a persistent connection state in JS
+                        }
+                    });
+                },
 
                 categorySizes: {
                     'Pro Jersey': ['1/2 yrs', '3/4 yrs', '5/6 yrs', '7/8 yrs', '9/11 yrs', 'XS', 'S', 'M', 'L', 'XL', '2XL', '3XL'],
@@ -691,6 +974,13 @@
                 showEditModal: false,
                 isUpdatingProduct: false,
                 editingProduct: { id: null, item_code: '', name: '', price: '', type: 'standard', category: '', imageFile: null, stock: [] },
+                isPrinterSimulation: false,
+
+                // Payment State
+                showPaymentModal: false,
+                paidAmount: null,
+                isSubmittingPayment: false,
+
                 newProducts: [
                     { item_code: '', name: '', price: '', type: 'standard', category: '', imageFile: null, stock: [] }
                 ],
@@ -765,6 +1055,10 @@
 
                 get total() {
                     return Math.max(0, this.subtotal - (this.discount || 0));
+                },
+
+                get changeAmount() {
+                    return Math.max(0, (this.paidAmount || 0) - this.total);
                 },
 
                 init() {
@@ -937,8 +1231,51 @@
                     try {
                         await axios.delete(`/api/products/${id}`);
                         this.products = this.products.filter(p => p.id !== id);
+                        await Swal.fire({
+                            title: 'Deleted!',
+                            text: 'Product has been deleted.',
+                            icon: 'success',
+                            background: '#1e293b',
+                            color: '#f8fafc'
+                        });
                     } catch (e) {
                         alert('Error deleting product: ' + (e.response?.data?.message || e.message));
+                    }
+                },
+
+                async deleteTransaction(id) {
+                    const result = await Swal.fire({
+                        title: 'Hapus Transaksi?',
+                        text: "Data transaksi ini akan dihapus permanen!",
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonColor: '#ef4444',
+                        cancelButtonColor: '#64748b',
+                        confirmButtonText: 'Ya, Hapus!',
+                        background: '#1e293b',
+                        color: '#f8fafc'
+                    });
+
+                    if (result.isConfirmed) {
+                        try {
+                            await axios.delete(`/api/transactions/${id}`);
+                            this.transactions = this.transactions.filter(t => t.id !== id);
+                            Swal.fire({
+                                title: 'Terhapus!',
+                                text: 'Transaksi berhasil dihapus.',
+                                icon: 'success',
+                                background: '#1e293b',
+                                color: '#f8fafc'
+                            });
+                        } catch (e) {
+                            Swal.fire({
+                                title: 'Gagal!',
+                                text: 'Gagal menghapus transaksi: ' + (e.response?.data?.message || e.message),
+                                icon: 'error',
+                                background: '#1e293b',
+                                color: '#f8fafc'
+                            });
+                        }
                     }
                 },
 
@@ -1021,18 +1358,34 @@
                         return; // Hard block — cannot proceed without sizes
                     }
 
+                    this.showPaymentModal = true;
+                    this.paidAmount = null; // Reset to empty
+
+                    // Focus the input after modal opens
+                    this.$nextTick(() => {
+                        const input = document.getElementById('paidAmountInput');
+                        if (input) input.focus();
+                    });
+                },
+
+                async confirmPayment() {
+                    this.isSubmittingPayment = true;
                     try {
                         const payload = {
                             subtotal: this.subtotal,
                             discount: this.discount || 0,
                             total_amount: this.total,
+                            paid_amount: this.paidAmount,
+                            change_amount: this.changeAmount,
                             items: this.cart
                         };
                         const res = await axios.post('/api/transactions', payload);
                         const transactionId = res.data.id;
+
                         // Clear cart
                         this.cart = [];
                         this.discount = 0;
+                        this.showPaymentModal = false;
 
                         // Show SweetAlert Success then open window
                         Swal.fire({
@@ -1045,8 +1398,10 @@
                             color: '#f8fafc'
                         }).then(() => {
                             window.open('/receipt/' + transactionId, '_blank', 'width=400,height=600');
-                            // Optionally send raw print job here if connected:
-                            // this.printReceipt(transactionId, payload);
+                            // Auto-print if connected OR simulation is ON
+                            if (this.printerStatus === 'connected' || this.isPrinterSimulation) {
+                                this.printReceipt(transactionId, payload);
+                            }
                         });
                     } catch (e) {
                         Swal.fire({
@@ -1056,6 +1411,8 @@
                             background: '#1e293b',
                             color: '#f8fafc'
                         });
+                    } finally {
+                        this.isSubmittingPayment = false;
                     }
                 },
 
@@ -1069,18 +1426,16 @@
 
                         // We request a device that offers generic Bluetooth Serial Port Profile (SPP) 
                         // or generic BLE services common to thermal printers.
+                        // We use acceptAllDevices: true because many generic printers do not advertise 
+                        // their service UUIDs in the scan response, making them "invisible" to filters.
                         const device = await navigator.bluetooth.requestDevice({
-                            filters: [
-                                { services: ['000018f0-0000-1000-8000-00805f9b34fb'] }, // Standard ESC/POS UUID
-                                { services: ['e7810a71-73ae-499d-8c15-faa9aef0c3f2'] } // Sometimes used by generic mini printers
-                            ],
+                            acceptAllDevices: true,
                             optionalServices: [
-                                '00001800-0000-1000-8000-00805f9b34fb',
-                                '00001801-0000-1000-8000-00805f9b34fb'
-                            ],
-                            acceptAllDevices: false
-                            // *Note*: To allow ALL devices, swap to acceptAllDevices: true and remove filters. 
-                            // But optionalServices must explicitly list the UUIDs you want to write to.
+                                '000018f0-0000-1000-8000-00805f9b34fb', // Standard ESC/POS
+                                'e7810a71-73ae-499d-8c15-faa9aef0c3f2', // Generic Mini Printer
+                                '00001800-0000-1000-8000-00805f9b34fb', // Generic Access
+                                '00001801-0000-1000-8000-00805f9b34fb'  // Generic Attribute
+                            ]
                         });
 
                         this.printerDevice = device;
@@ -1119,15 +1474,18 @@
                         });
 
                     } catch (error) {
-                        console.error('Bluetooth Connection Error:', error);
-                        if (error.name !== 'NotFoundError') { // Not canceled by user
-                            Swal.fire({
-                                icon: 'error',
-                                title: 'Connection Failed',
-                                text: error.message,
-                                background: '#1e293b', color: '#f8fafc'
-                            });
+                        if (error.name === 'NotFoundError' || error.name === 'AbortError') {
+                            // User cancelled the chooser or it was aborted (standard behavior)
+                            console.info('Bluetooth connection cancelled by user.');
+                            return;
                         }
+                        console.error('Bluetooth Connection Error:', error);
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Connection Failed',
+                            text: error.message,
+                            background: '#1e293b', color: '#f8fafc'
+                        });
                     }
                 },
 
@@ -1146,72 +1504,223 @@
                 },
 
                 async printReceipt(transactionId, payload) {
-                    if (this.printerStatus !== 'connected' || !this.printerCharacteristic) {
+                    if (this.printerType === 'wifi') {
+                        return this.printWiFi(transactionId, payload);
+                    }
+
+                    if (this.printerType === 'usb') {
+                        return this.printUSB(transactionId, payload);
+                    }
+
+                    if (!this.isPrinterSimulation && (this.printerStatus !== 'connected' || !this.printerCharacteristic)) {
                         console.warn("Cannot print, printer not connected.");
                         return;
                     }
 
                     try {
-                        // Very simplified ESC/POS Payload format (Raw Text)
-                        // Production apps often use `escpos-encoder` or similar JS libraries to build bytes
                         const encoder = new TextEncoder();
+                        let text = this.buildReceiptText(transactionId, payload);
 
-                        let text = "=== MAXUMAX POS ===\n";
-                        text += `Txn: #${transactionId}\n`;
-                        text += "--------------------------------\n";
-
-                        payload.items.forEach(item => {
-                            text += `${item.product_name} x${item.quantity}\n`;
-                            text += `  Size: ${item.size} - BND ${item.subtotal}\n`;
-                        });
-
-                        text += "--------------------------------\n";
-                        text += `Subtotal: BND ${payload.subtotal}\n`;
-                        if (payload.discount > 0) text += `Discount: BND -${payload.discount}\n`;
-                        text += `Total: BND ${payload.total_amount}\n`;
-                        text += "\nThank you for shopping!\n\n\n";
+                        // If Simulation mode is on, show a virtual receipt instead of sending to Bluetooth
+                        if (this.isPrinterSimulation) {
+                            await this.showVirtualReceipt(text);
+                            return;
+                        }
 
                         // ESC/POS Commands (Init printer, feed lines, cut)
-                        // [27, 64] = Initialize
-                        // [10] = Line feed
                         const initBytes = new Uint8Array([27, 64]);
                         const textBytes = encoder.encode(text);
-                        const endBytes = new Uint8Array([10, 10, 10, 10, 29, 86, 66, 0]); // Feed 4 lines and Cut
+                        const endBytes = new Uint8Array([10, 10, 10, 10, 29, 86, 66, 0]);
 
-                        // Concatenate Uint8Arrays
                         let totalLength = initBytes.byteLength + textBytes.byteLength + endBytes.byteLength;
                         let fullPayload = new Uint8Array(totalLength);
                         fullPayload.set(initBytes, 0);
                         fullPayload.set(textBytes, initBytes.byteLength);
                         fullPayload.set(endBytes, initBytes.byteLength + textBytes.byteLength);
 
-                        // Chunk the payload (BLE characteristics typically have a ~20 to 512 byte limit per write)
                         const CHUNK_SIZE = 50;
                         for (let i = 0; i < fullPayload.length; i += CHUNK_SIZE) {
                             const chunk = fullPayload.slice(i, i + CHUNK_SIZE);
-                            // Some printers require writeWithoutResponse
                             if (this.printerCharacteristic.properties.writeWithoutResponse) {
                                 await this.printerCharacteristic.writeValueWithoutResponse(chunk);
                             } else {
                                 await this.printerCharacteristic.writeValue(chunk);
                             }
-                            // Small delay to prevent overwhelming the device buffer
                             await new Promise(res => setTimeout(res, 20));
                         }
-
                     } catch (err) {
-                        console.error("Print Failed", err);
+                        this.handlePrintError(err);
+                    }
+                },
+
+                buildReceiptText(transactionId, payload) {
+                    let text = "=== MAXUMAX POS ===\n";
+                    text += `Txn: #${transactionId}\n`;
+                    text += "--------------------------------\n";
+                    payload.items.forEach(item => {
+                        text += `${item.product_name} x${item.quantity}\n`;
+                        text += `  Size: ${item.size} - BND ${item.subtotal}\n`;
+                    });
+                    text += "--------------------------------\n";
+                    text += `Subtotal: BND ${payload.subtotal}\n`;
+                    if (payload.discount > 0) text += `Discount: BND -${payload.discount}\n`;
+                    text += `Total: BND ${payload.total_amount}\n`;
+                    text += `Cash Paid: BND ${payload.paid_amount}\n`;
+                    text += `Change: BND ${payload.change_amount}\n`;
+                    text += "\nThank you for shopping!\n\n\n";
+                    return text;
+                },
+
+                async showVirtualReceipt(text) {
+                    await Swal.fire({
+                        title: 'Virtual Receipt (Simulation)',
+                        html: `<pre class="text-left bg-slate-900 text-emerald-400 p-4 rounded-lg font-mono text-xs overflow-x-auto">${text}</pre>`,
+                        icon: 'info',
+                        background: '#1e293b',
+                        color: '#f8fafc',
+                        confirmButtonText: 'Great!'
+                    });
+                },
+
+                async printWiFi(transactionId, payload) {
+                    const text = this.buildReceiptText(transactionId, payload);
+
+                    if (this.isPrinterSimulation) {
+                        return this.showVirtualReceipt(text);
+                    }
+
+                    try {
+                        await axios.post('/api/print-wifi', {
+                            ip: this.wifiIP,
+                            port: this.wifiPort,
+                            text: text
+                        });
+
                         Swal.fire({
                             toast: true,
                             position: 'top-end',
-                            icon: 'error',
-                            title: 'Printing Failed: ' + err.message,
+                            icon: 'success',
+                            title: 'Sent to WiFi Printer!',
                             showConfirmButton: false,
-                            timer: 3000,
+                            timer: 2000,
+                            background: '#1e293b', color: '#f8fafc'
+                        });
+                    } catch (err) {
+                        this.handlePrintError(err);
+                    }
+                },
+
+                // --- WebUSB Logic ---
+
+                async connectUSB() {
+                    try {
+                        if (!navigator.usb) {
+                            throw new Error("WebUSB is not supported in this browser. Use Chrome/Edge.");
+                        }
+
+                        const device = await navigator.usb.requestDevice({ filters: [] });
+                        await device.open();
+                        await device.selectConfiguration(1);
+
+                        // Find the interface with a bulk out endpoint
+                        let endpointOut = null;
+                        for (const itf of device.configuration.interfaces) {
+                            for (const alt of itf.alternates) {
+                                if (alt.interfaceClass === 7) { // 7 is usually the Printer Class
+                                    for (const ep of alt.endpoints) {
+                                        if (ep.direction === 'out' && ep.type === 'bulk') {
+                                            await device.claimInterface(itf.interfaceNumber);
+                                            endpointOut = ep.endpointNumber;
+                                            break;
+                                        }
+                                    }
+                                }
+                                if (endpointOut !== null) break;
+                            }
+                            if (endpointOut !== null) break;
+                        }
+
+                        if (endpointOut === null) {
+                            throw new Error("Could not find a valid printing endpoint on this USB device.");
+                        }
+
+                        this.usbDevice = device;
+                        this.usbEndpointOut = endpointOut;
+                        this.printerStatus = 'connected';
+
+                        Swal.fire({
+                            toast: true,
+                            position: 'top-end',
+                            icon: 'success',
+                            title: 'USB Printer Connected',
+                            showConfirmButton: false,
+                            timer: 2000,
+                            background: '#1e293b', color: '#f8fafc'
+                        });
+
+                    } catch (err) {
+                        if (err.name === 'NotFoundError') return; // Cancelled
+                        console.error("USB Connection Error:", err);
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'USB Connection Failed',
+                            text: err.message,
                             background: '#1e293b', color: '#f8fafc'
                         });
                     }
+                },
+
+                async disconnectUSB() {
+                    if (this.usbDevice) {
+                        await this.usbDevice.close();
+                    }
+                    this.usbDevice = null;
+                    this.usbEndpointOut = null;
+                    this.printerStatus = 'disconnected';
+                },
+
+                async printUSB(transactionId, payload) {
+                    const text = this.buildReceiptText(transactionId, payload);
+
+                    if (this.isPrinterSimulation) {
+                        return this.showVirtualReceipt(text);
+                    }
+
+                    if (!this.usbDevice || this.usbEndpointOut === null) {
+                        throw new Error("USB Printer not connected.");
+                    }
+
+                    try {
+                        const encoder = new TextEncoder();
+                        const initBytes = new Uint8Array([27, 64]);
+                        const textBytes = encoder.encode(text);
+                        const endBytes = new Uint8Array([10, 10, 10, 10, 29, 86, 66, 0]);
+
+                        const fullPayload = new Uint8Array(initBytes.length + textBytes.length + endBytes.length);
+                        fullPayload.set(initBytes, 0);
+                        fullPayload.set(textBytes, initBytes.length);
+                        fullPayload.set(endBytes, initBytes.length + textBytes.length);
+
+                        await this.usbDevice.transferOut(this.usbEndpointOut, fullPayload);
+
+                    } catch (err) {
+                        this.handlePrintError(err);
+                    }
+                },
+
+                handlePrintError(err) {
+                    console.error("Print Failed", err);
+                    Swal.fire({
+                        toast: true,
+                        position: 'top-end',
+                        icon: 'error',
+                        title: 'Printing Failed: ' + (err.response?.data?.message || err.message),
+                        showConfirmButton: false,
+                        timer: 3000,
+                        background: '#1e293b', color: '#f8fafc'
+                    });
                 }
+
             }
         }
     </script>
