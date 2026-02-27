@@ -700,6 +700,87 @@
         </div>
     </div>
 
+    <!-- Payment Confirmation Modal -->
+    <div x-cloak x-show="showPaymentModal" class="fixed inset-0 z-[60] flex items-center justify-center p-4">
+        <!-- Backdrop -->
+        <div x-show="showPaymentModal" x-transition.opacity class="absolute inset-0 bg-slate-950/90 backdrop-blur-md"
+            @click="showPaymentModal = false"></div>
+
+        <!-- Modal Content -->
+        <div x-show="showPaymentModal" x-transition:enter="transition ease-out duration-300 transform"
+            x-transition:enter-start="opacity-0 translate-y-8 scale-95"
+            x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+            x-transition:leave="transition ease-in duration-200 transform"
+            x-transition:leave-start="opacity-100 translate-y-0 scale-100"
+            x-transition:leave-end="opacity-0 translate-y-8 scale-95"
+            class="bg-slate-800 rounded-3xl shadow-2xl border border-slate-700 w-full max-w-lg relative z-10 overflow-hidden">
+
+            <div class="p-8 space-y-8">
+                <div class="text-center">
+                    <h3 class="text-2xl font-bold text-white mb-2">Payment Confirmation</h3>
+                    <p class="text-slate-400">Please enter the cash amount received</p>
+                </div>
+
+                <div class="grid grid-cols-2 gap-6">
+                    <div class="bg-slate-900/50 p-6 rounded-2xl border border-slate-700/50 flex flex-col items-center">
+                        <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2">Total
+                            Bill</span>
+                        <div class="text-3xl font-bold text-white" x-text="formatCurrency(total)"></div>
+                    </div>
+                    <div class="bg-blue-600/10 p-6 rounded-2xl border border-blue-500/30 flex flex-col items-center">
+                        <span class="text-xs font-semibold text-blue-400 uppercase tracking-wider mb-2">Change</span>
+                        <div class="text-3xl font-bold text-blue-400" x-text="formatCurrency(changeAmount)"></div>
+                    </div>
+                </div>
+
+                <div class="space-y-4">
+                    <label class="block text-center text-sm font-medium text-slate-300">Cash Received (BND)</label>
+                    <div class="relative group">
+                        <span
+                            class="absolute inset-y-0 left-0 flex items-center pl-6 text-slate-500 font-bold text-2xl">BND</span>
+                        <input type="number" id="paidAmountInput" x-model.number="paidAmount" step="0.01"
+                            @keydown.enter="if(paidAmount >= total) confirmPayment()"
+                            class="w-full bg-slate-900 border-2 border-slate-700 rounded-2xl py-6 pl-20 pr-6 text-4xl font-bold text-white text-right focus:border-blue-500 focus:ring-4 focus:ring-blue-500/20 outline-none transition transition-all duration-300 placeholder-slate-700"
+                            placeholder="0.00">
+                    </div>
+
+                    <!-- Quick Cash Buttons -->
+                    <div class="grid grid-cols-4 gap-2">
+                        <template x-for="val in [10, 20, 50, 100]" :key="val">
+                            <button @click="paidAmount = val"
+                                class="py-2.5 bg-slate-700/50 hover:bg-slate-700 text-slate-300 rounded-xl border border-slate-600 transition font-medium text-sm">
+                                BND <span x-text="val"></span>
+                            </button>
+                        </template>
+                        <button @click="paidAmount = total"
+                            class="col-span-4 py-3 bg-slate-700/50 hover:bg-blue-600/20 hover:text-blue-400 hover:border-blue-500/50 text-slate-300 rounded-xl border border-slate-600 transition font-bold text-sm tracking-wide">
+                            Exact Amount (BND <span x-text="total"></span>)
+                        </button>
+                    </div>
+                </div>
+
+                <div class="flex gap-4 pt-4">
+                    <button @click="showPaymentModal = false"
+                        class="flex-1 py-4 font-semibold text-slate-400 hover:text-white transition">Cancel</button>
+                    <button @click="confirmPayment()" :disabled="paidAmount < total || isSubmittingPayment"
+                        class="flex-[2] bg-blue-600 hover:bg-blue-500 disabled:bg-slate-700 disabled:text-slate-500 disabled:cursor-not-allowed text-white font-bold py-4 rounded-2xl shadow-xl shadow-blue-500/20 transition transform active:scale-[0.98] flex justify-center items-center gap-2">
+                        <span x-show="!isSubmittingPayment">Confirm Payment</span>
+                        <span x-show="isSubmittingPayment" class="flex items-center gap-2">
+                            <svg class="animate-spin h-5 w-5" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"
+                                    fill="none"></circle>
+                                <path class="opacity-75" fill="currentColor"
+                                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
+                                </path>
+                            </svg>
+                            Submitting...
+                        </span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Mobile Bottom Navigation -->
     <div
         class="sm:hidden fixed bottom-0 left-0 right-0 bg-slate-800 border-t border-slate-700 flex justify-around p-2 z-40">
@@ -757,6 +838,12 @@
                 isUpdatingProduct: false,
                 editingProduct: { id: null, item_code: '', name: '', price: '', type: 'standard', category: '', imageFile: null, stock: [] },
                 isPrinterSimulation: false,
+
+                // Payment State
+                showPaymentModal: false,
+                paidAmount: 0,
+                isSubmittingPayment: false,
+
                 newProducts: [
                     { item_code: '', name: '', price: '', type: 'standard', category: '', imageFile: null, stock: [] }
                 ],
@@ -831,6 +918,10 @@
 
                 get total() {
                     return Math.max(0, this.subtotal - (this.discount || 0));
+                },
+
+                get changeAmount() {
+                    return Math.max(0, (this.paidAmount || 0) - this.total);
                 },
 
                 init() {
@@ -1130,18 +1221,34 @@
                         return; // Hard block — cannot proceed without sizes
                     }
 
+                    this.showPaymentModal = true;
+                    this.paidAmount = 0; // Reset
+
+                    // Focus the input after modal opens
+                    this.$nextTick(() => {
+                        const input = document.getElementById('paidAmountInput');
+                        if (input) input.focus();
+                    });
+                },
+
+                async confirmPayment() {
+                    this.isSubmittingPayment = true;
                     try {
                         const payload = {
                             subtotal: this.subtotal,
                             discount: this.discount || 0,
                             total_amount: this.total,
+                            paid_amount: this.paidAmount,
+                            change_amount: this.changeAmount,
                             items: this.cart
                         };
                         const res = await axios.post('/api/transactions', payload);
                         const transactionId = res.data.id;
+
                         // Clear cart
                         this.cart = [];
                         this.discount = 0;
+                        this.showPaymentModal = false;
 
                         // Show SweetAlert Success then open window
                         Swal.fire({
@@ -1167,6 +1274,8 @@
                             background: '#1e293b',
                             color: '#f8fafc'
                         });
+                    } finally {
+                        this.isSubmittingPayment = false;
                     }
                 },
 
@@ -1283,6 +1392,8 @@
                         text += `Subtotal: BND ${payload.subtotal}\n`;
                         if (payload.discount > 0) text += `Discount: BND -${payload.discount}\n`;
                         text += `Total: BND ${payload.total_amount}\n`;
+                        text += `Cash Paid: BND ${payload.paid_amount}\n`;
+                        text += `Change: BND ${payload.change_amount}\n`;
                         text += "\nThank you for shopping!\n\n\n";
 
                         // If Simulation mode is on, show a virtual receipt instead of sending to Bluetooth

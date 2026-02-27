@@ -152,6 +152,8 @@ class PosController extends Controller
             'subtotal' => 'required|numeric',
             'discount' => 'nullable|numeric',
             'total_amount' => 'required|numeric',
+            'paid_amount' => 'nullable|numeric',
+            'change_amount' => 'nullable|numeric',
             'payment_method' => 'nullable|string',
             'items' => 'required|array',
         ]);
@@ -161,6 +163,8 @@ class PosController extends Controller
             'subtotal' => $validated['subtotal'],
             'discount' => $validated['discount'] ?? 0,
             'total_amount' => $validated['total_amount'],
+            'paid_amount' => $validated['paid_amount'] ?? 0,
+            'change_amount' => $validated['change_amount'] ?? 0,
             'payment_method' => $validated['payment_method'] ?? 'Cash',
         ]);
 
